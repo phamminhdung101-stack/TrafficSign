@@ -77,11 +77,6 @@ CREATE TABLE detection_details (
     CONSTRAINT fk_details_traffic_sign_id FOREIGN KEY (traffic_sign_id) REFERENCES traffic_signs(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-INSERT INTO users 
-(username, email, password_hash, full_name, role, is_active)
-VALUES 
-('admin', 'admin@gmail.com', '123456', 'Administrator', 'admin', TRUE);
-
 -- 6. Dữ liệu khởi tạo cho bảng traffic_signs (Tạo tự động từ dataset)
 INSERT INTO traffic_signs (class_id, code, name, category, description, image_path) VALUES
 (0, 'DP-135', 'Hết tất cả các lệnh cấm', 'Biển báo hết cấm', 'Hình ảnh và nhận diện cho biển báo Hết tất cả các lệnh cấm (DP-135)', NULL),
