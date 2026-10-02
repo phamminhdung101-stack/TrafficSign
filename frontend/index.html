@@ -1,1 +1,171 @@
-//code
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Nhận diện biển báo giao thông</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Thanh menu -->
+    <header>
+        <div class="logo">
+            🚦 Traffic Sign AI
+        </div>
+
+     <nav>
+         <a href="index.html">Trang chủ</a>
+         <a href="history.html">Lịch sử nhận diện</a>
+         <a href="#">Đăng xuất</a>
+     </nav>
+    </header>
+
+
+    <!-- Nội dung chính -->
+    <main>
+
+        <h1>NHẬN DIỆN BIỂN BÁO GIAO THÔNG</h1>
+
+        <p class="description">
+            Tải hình ảnh, video hoặc sử dụng camera để nhận diện biển báo giao thông
+        </p>
+
+
+        <!-- Các lựa chọn nhận diện -->
+        <section class="options">
+
+            <div class="option-card">
+                <div class="icon">🖼️</div>
+
+                <h2>Tải hình ảnh</h2>
+
+                <p>
+                    Chọn hình ảnh biển báo từ máy tính
+                </p>
+
+             <input type="file" id="imageInput" accept="image/*">
+
+             <button onclick="chooseImage()">
+              Chọn hình ảnh
+             </button>
+            </div>
+
+
+           <div class="option-card">
+             <div class="icon">🎥</div>
+
+             <h2>Tải video</h2>
+
+             <p>
+                 Chọn video có biển báo giao thông
+             </p>
+
+             <input type="file" id="videoInput" accept="video/*">
+
+             <button onclick="chooseVideo()">
+                 Chọn video
+             </button>
+           </div>
+
+
+           <div class="option-card">
+              <div class="icon">📷</div>
+
+            <h2>Quét Camera</h2>
+
+              <p>
+              Sử dụng camera để nhận diện trực tiếp
+              </p>
+
+             <button onclick="openCamera()">
+              Mở Camera
+             </button>
+           </div>
+
+        </section>
+
+
+        <!-- Khu vực nhận diện -->
+        <section class="recognition">
+
+            <h2>Khu vực nhận diện</h2>
+
+            <div class="preview">
+
+              <img id="previewImage" src="" alt="Ảnh xem trước">
+
+              <video id="camera" autoplay playsinline></video>
+
+              <p id="previewText">
+                  Hình ảnh / Camera sẽ hiển thị tại đây
+              </p>
+
+           </div>
+
+            <button class="recognize-btn" onclick="recognizeImage()">
+             🔍 THỰC HIỆN NHẬN DIỆN
+            </button>
+        </section>
+ <!-- Kết quả -->
+        <section class="result">
+
+            <h2>Kết quả nhận diện</h2>
+
+            <div class="result-box">
+
+                <p>
+                    Chưa có kết quả nhận diện
+                </p>
+
+            </div>
+        </section>
+
+        </main>
+
+       <nav>
+    <a href="index.html">Trang chủ</a>
+    <a href="history.html">Lịch sử nhận diện</a>
+    <a href="#">Đăng xuất</a>
+</nav>
+
+             <p>
+             <strong>Loại biển báo:</strong>
+             <span id="signName">--</span>
+             </p>
+
+             <p>
+             <strong>Độ chính xác:</strong>
+             <span id="confidence">--</span>
+             </p>
+
+        </div>
+
+    </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- Chân trang -->
+    <footer>
+
+        <p>
+            Đề tài: Xây dựng chương trình nhận diện biển báo giao thông
+        </p>
+
+        <p>
+            Xử lý ảnh và thị giác máy tính
+        </p>
+
+    </footer>
+
+
+    <script src="script.js"></script>
+
+</body>
+</html>
