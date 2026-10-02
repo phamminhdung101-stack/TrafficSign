@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tải dữ liệu & Nhận diện - AI Vision</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .drag-active {
+            border-color: #3b82f6 !important;
+            background-color: #eff6ff !important;
+        }
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans text-slate-800">
+    <!-- Navbar -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl font-bold"><span class="text-blue-600">AI</span> Vision</span>
+                    <div class="hidden md:ml-10 md:flex md:space-x-8">
+                        <a href="upload.html" class="border-blue-500 text-slate-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Nhận diện</a>
+                        <a href="history.html" class="border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Lịch sử</a>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <a href="login.html" class="text-slate-500 hover:text-slate-700 p-2"><i class="fa-solid fa-arrow-right-from-bracket"></i></a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold tracking-tight text-slate-900">Bảng điều khiển Nhận diện AI</h1>
+            <p class="text-slate-500 mt-2">Tải lên hình ảnh, video hoặc sử dụng camera để hệ thống phân tích.</p>
+        </div>
+
+        <div class="bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden">
+            <!-- Tabs -->
+            <div class="border-b border-slate-200 bg-slate-50 flex">
+                <button onclick="switchTab('upload')" id="tab-upload" class="flex-1 py-4 text-center font-medium text-blue-600 border-b-2 border-blue-600 bg-white">
+                    <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Tải file (Ảnh/Video)
+                </button>
+                <button onclick="switchTab('camera')" id="tab-camera" class="flex-1 py-4 text-center font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-700">
+                    <i class="fa-solid fa-camera mr-2"></i> Quét Camera
+                </button>
+            </div>
+
+            <div class="p-8">
+                <!-- Upload Area -->
+                <div id="content-upload" class="space-y-6">
+                    <div id="dropzone" class="border-2 border-dashed border-slate-300 rounded-xl p-12 flex flex-col items-center justify-center cursor-pointer transition-colors bg-slate-50 hover:bg-slate-100">
+                        <input type="file" id="fileInput" class="hidden" accept="image/*,video/*">
+                        <i class="fa-solid fa-cloud-arrow-up text-5xl text-slate-400 mb-4"></i>
+                        <p class="text-slate-600 font-medium text-center text-lg">
+                            Kéo thả hình ảnh/video vào đây, hoặc <span class="text-blue-600">chọn file</span>
+                        </p>
+                        <p class="text-sm text-slate-400 mt-2">Hỗ trợ: JPG, PNG, MP4</p>
+                    </div>
+                    
+                    <!-- File preview -->
+                    <div id="file-preview" class="hidden items-center justify-between p-4 bg-white border border-slate-200 rounded-lg shadow-sm mt-4">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-blue-100 rounded flex items-center justify-center text-blue-600">
+                                <i class="fa-solid fa-file-image text-xl" id="file-icon"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-slate-700" id="file-name">filename.jpg</p>
+                                <p class="text-xs text-slate-500" id="file-size">2.5 MB</p>
+                            </div>
+                        </div>
+                        <button onclick="clearFile()" class="text-slate-400 hover:text-red-500 p-2"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                </div>
+
+                <!-- Camera Area -->
+                <div id="content-camera" class="hidden space-y-6 flex flex-col items-center">
+                    <div class="relative rounded-xl overflow-hidden border bg-black shadow-lg w-full max-w-lg aspect-video flex justify-center items-center">
+                        <video id="webcam-video" autoplay playsinline class="w-full h-full object-cover hidden"></video>
+                        <p id="cam-placeholder" class="text-slate-400"><i class="fa-solid fa-video-slash mb-2 block text-center text-3xl"></i> Bật camera để xem trước</p>
+                        <canvas id="webcam-canvas" class="hidden"></canvas>
+                    </div>
+                    <div class="flex space-x-4">
+                        <button id="btn-start-cam" onclick="startCamera()" class="bg-slate-800 hover:bg-slate-900 text-white px-6 py-2 rounded-lg transition shadow">
+                            <i class="fa-solid fa-video mr-2"></i> Mở Camera
+                        </button>
+                        <button id="btn-capture" onclick="captureImage()" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition shadow">
+                            <i class="fa-solid fa-camera mr-2"></i> Chụp ảnh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Action Button -->
+                <div class="mt-8 flex justify-end">
+                    <button id="btn-recognize" onclick="processRecognition()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span id="btn-text">Thực hiện nhận diện</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-red-600 text-white px-6 py-4 rounded-lg shadow-xl transform transition-transform duration-300 translate-y-24 opacity-0 flex items-center z-50">
+        <i class="fa-solid fa-circle-exclamation mr-3 text-xl"></i>
+        <div>
+            <h4 class="font-bold">Lỗi xử lý!</h4>
+            <p class="text-sm opacity-90" id="toast-message">Vui lòng chọn file trước khi nhận diện.</p>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        function switchTab(tab) {
+            document.getElementById('content-upload').classList.toggle('hidden', tab !== 'upload');
+            document.getElementById('content-camera').classList.toggle('hidden', tab !== 'camera');
+            
+            if(tab === 'upload') {
+                document.getElementById('tab-upload').className = "flex-1 py-4 text-center font-medium text-blue-600 border-b-2 border-blue-600 bg-white";
+                document.getElementById('tab-camera').className = "flex-1 py-4 text-center font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-700";
+            } else {
+                document.getElementById('tab-camera').className = "flex-1 py-4 text-center font-medium text-blue-600 border-b-2 border-blue-600 bg-white";
+                document.getElementById('tab-upload').className = "flex-1 py-4 text-center font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-700";
+            }
+        }
+
+        // Drag & Drop
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const filePreview = document.getElementById('file-preview');
+        let currentFile = null;
+
+        dropzone.addEventListener('click', () => fileInput.click());
+        
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('drag-active');
+        });
+        
+        dropzone.addEventListener('dragleave', () => {
+            dropzone.classList.remove('drag-active');
+        });
+        
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('drag-active');
+            if(e.dataTransfer.files.length) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if(e.target.files.length) handleFile(e.target.files[0]);
+        });
+
+        function handleFile(file) {
+            currentFile = file;
+            document.getElementById('file-name').textContent = file.name;
+            document.getElementById('file-size').textContent = (file.size / 1024 / 1024).toFixed(2) + " MB";
+            document.getElementById('file-icon').className = file.type.includes('video') ? "fa-solid fa-file-video" : "fa-solid fa-file-image";
+            filePreview.classList.remove('hidden');
+            filePreview.classList.add('flex');
+            dropzone.classList.add('hidden');
+        }
+
+        function clearFile() {
+            currentFile = null;
+            fileInput.value = '';
+            filePreview.classList.add('hidden');
+            filePreview.classList.remove('flex');
+            dropzone.classList.remove('hidden');
+        }
+
+        // Camera
+        let stream = null;
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const video = document.getElementById('webcam-video');
+                video.srcObject = stream;
+                video.classList.remove('hidden');
+                document.getElementById('cam-placeholder').classList.add('hidden');
+                document.getElementById('btn-start-cam').classList.add('hidden');
+                document.getElementById('btn-capture').classList.remove('hidden');
+            } catch (err) {
+                showToast("Không thể truy cập camera. Vui lòng kiểm tra quyền.");
+            }
+        }
+
+        function captureImage() {
+            const video = document.getElementById('webcam-video');
+            const canvas = document.getElementById('webcam-canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            
+            // Generate visual feedback
+            video.classList.add('opacity-50');
+            setTimeout(() => video.classList.remove('opacity-50'), 200);
+            
+            // Mark as having file
+            currentFile = "camera_snapshot";
+            showToast("Đã chụp ảnh thành công!", "success");
+        }
+
+        // Processing & Toast
+        function showToast(msg, type = "error") {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = msg;
+            toast.className = `fixed bottom-4 right-4 px-6 py-4 rounded-lg shadow-xl transform transition-transform duration-300 flex items-center z-50 ${type === 'error' ? 'bg-red-600' : 'bg-green-600'} text-white`;
+            
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 3000);
+        }
+
+        function processRecognition() {
+            if(!currentFile) {
+                showToast("Vui lòng tải lên dữ liệu hoặc chụp ảnh từ camera!");
+                return;
+            }
+
+            const btn = document.getElementById('btn-recognize');
+            const btnText = document.getElementById('btn-text');
+            
+            btn.disabled = true;
+            btnText.innerHTML = '<span class="loader"></span> Đang xử lý...';
+            
+            // Simulate API call
+            setTimeout(() => {
+                // Redirect to results
+                window.location.href = "result.html";
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

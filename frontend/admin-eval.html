@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đánh giá Mô hình - Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-50 font-sans text-slate-800 flex h-screen overflow-hidden">
+    
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col hidden md:flex">
+        <div class="h-16 flex items-center px-6 border-b border-slate-800">
+            <span class="text-2xl font-bold"><span class="text-blue-400">AI</span> Admin</span>
+        </div>
+        <nav class="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+            <a href="admin-data.html" class="flex items-center px-3 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-lg transition">
+                <i class="fa-solid fa-database w-6"></i> Quản lý Dataset
+            </a>
+            <a href="admin-train.html" class="flex items-center px-3 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-lg transition">
+                <i class="fa-solid fa-microchip w-6"></i> Huấn luyện Model
+            </a>
+            <a href="admin-eval.html" class="flex items-center px-3 py-3 bg-blue-600 text-white rounded-lg">
+                <i class="fa-solid fa-chart-simple w-6"></i> Đánh giá Model
+            </a>
+        </nav>
+        <div class="p-4 border-t border-slate-800">
+            <a href="login.html" class="flex items-center px-3 py-2 text-slate-400 hover:text-white transition">
+                <i class="fa-solid fa-right-from-bracket w-6"></i> Đăng xuất
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content wrapper -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Topbar -->
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-10">
+            <button class="md:hidden text-slate-500 hover:text-slate-700">
+                <i class="fa-solid fa-bars text-xl"></i>
+            </button>
+            <div class="hidden md:block"></div>
+            <div class="flex items-center space-x-4">
+                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold border border-blue-200">AD</div>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <main class="flex-1 overflow-y-auto p-6 md:p-8">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold tracking-tight text-slate-900">Đánh giá Mô hình (Metrics & Evaluation)</h1>
+                <p class="text-slate-500 mt-1">Các biểu đồ trực quan thể hiện hiệu suất của mô hình AI hiện tại.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Line Chart -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h2 class="text-xl font-bold mb-1">Độ chính xác và Loss qua các Epochs</h2>
+                    <p class="text-sm text-slate-500 mb-6">Biểu đồ đường theo dõi quá trình huấn luyện.</p>
+                    <div class="relative h-72 w-full">
+                        <canvas id="lineChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Bar Chart -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h2 class="text-xl font-bold mb-1">Chỉ số mAP theo từng Lớp</h2>
+                    <p class="text-sm text-slate-500 mb-6">Mean Average Precision cho các biển báo giao thông.</p>
+                    <div class="relative h-72 w-full">
+                        <canvas id="barChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Line Chart (Loss/Accuracy)
+        const ctxLine = document.getElementById('lineChart').getContext('2d');
+        new Chart(ctxLine, {
+            type: 'line',
+            data: {
+                labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
+                datasets: [
+                    {
+                        label: 'Training Loss',
+                        data: [0.8, 0.6, 0.45, 0.35, 0.28, 0.22, 0.18, 0.15, 0.12, 0.09],
+                        borderColor: '#ef4444',
+                        backgroundColor: '#ef4444',
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Accuracy (%)',
+                        data: [55, 68, 79, 85, 89, 92, 94, 95.5, 96.8, 98.2],
+                        borderColor: '#3b82f6',
+                        backgroundColor: '#3b82f6',
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { type: 'linear', position: 'left', title: { display: true, text: 'Loss' } },
+                    y1: { type: 'linear', position: 'right', title: { display: true, text: 'Accuracy (%)' }, grid: { drawOnChartArea: false } }
+                }
+            }
+        });
+
+        // Bar Chart (mAP by class)
+        const ctxBar = document.getElementById('barChart').getContext('2d');
+        new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: ['Cấm đi ngược chiều', 'Dừng lại', 'Tốc độ tối đa 50', 'Chỗ đỗ xe', 'Cấm rẽ trái'],
+                datasets: [{
+                    label: 'mAP (%)',
+                    data: [98.5, 99.1, 95.2, 97.4, 94.8],
+                    backgroundColor: '#10b981',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { max: 100, title: { display: true, text: 'mAP (%)' } }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

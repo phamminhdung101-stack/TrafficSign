@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Huấn luyện Mô hình - Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-50 font-sans text-slate-800 flex h-screen overflow-hidden">
+    
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col hidden md:flex">
+        <div class="h-16 flex items-center px-6 border-b border-slate-800">
+            <span class="text-2xl font-bold"><span class="text-blue-400">AI</span> Admin</span>
+        </div>
+        <nav class="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+            <a href="admin-data.html" class="flex items-center px-3 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-lg transition">
+                <i class="fa-solid fa-database w-6"></i> Quản lý Dataset
+            </a>
+            <a href="admin-train.html" class="flex items-center px-3 py-3 bg-blue-600 text-white rounded-lg">
+                <i class="fa-solid fa-microchip w-6"></i> Huấn luyện Model
+            </a>
+            <a href="admin-eval.html" class="flex items-center px-3 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-lg transition">
+                <i class="fa-solid fa-chart-simple w-6"></i> Đánh giá Model
+            </a>
+        </nav>
+        <div class="p-4 border-t border-slate-800">
+            <a href="login.html" class="flex items-center px-3 py-2 text-slate-400 hover:text-white transition">
+                <i class="fa-solid fa-right-from-bracket w-6"></i> Đăng xuất
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content wrapper -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Topbar -->
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-10">
+            <button class="md:hidden text-slate-500 hover:text-slate-700">
+                <i class="fa-solid fa-bars text-xl"></i>
+            </button>
+            <div class="hidden md:block"></div>
+            <div class="flex items-center space-x-4">
+                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold border border-blue-200">AD</div>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <main class="flex-1 overflow-y-auto p-6 md:p-8">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold tracking-tight text-slate-900">Huấn luyện Mô hình AI</h1>
+                <p class="text-slate-500 mt-1">Khởi chạy và theo dõi tiến trình fine-tune model (YOLO/ResNet).</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-6 border-b border-slate-200 bg-slate-50">
+                    <h2 class="text-xl font-bold">Bảng điều khiển Huấn luyện</h2>
+                    <p class="text-sm text-slate-500 mt-1">Cấu hình: Batch size 32, 10 Epochs, Optimizer Adam</p>
+                </div>
+                
+                <div class="p-6 space-y-8">
+                    <!-- Controls -->
+                    <div class="flex space-x-4">
+                        <button id="btn-start" onclick="startTraining()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium shadow flex items-center transition">
+                            <i class="fa-solid fa-play mr-2"></i> Bắt đầu Huấn luyện
+                        </button>
+                        <button id="btn-stop" onclick="stopTraining()" class="bg-red-100 text-red-600 hover:bg-red-200 px-6 py-2 rounded-lg font-medium transition flex items-center opacity-50 cursor-not-allowed" disabled>
+                            <i class="fa-solid fa-stop mr-2"></i> Dừng lại
+                        </button>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div>
+                        <div class="flex justify-between text-sm font-medium mb-2">
+                            <span>Tiến độ tổng thể</span>
+                            <span id="progress-text">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-3">
+                            <div id="progress-bar" class="bg-blue-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Terminal Logs -->
+                    <div class="bg-slate-950 rounded-lg p-4 font-mono text-sm text-green-400 h-72 overflow-y-auto shadow-inner border border-slate-800">
+                        <div class="flex items-center text-slate-500 mb-3 border-b border-slate-800 pb-2 sticky top-0 bg-slate-950">
+                            <i class="fa-solid fa-terminal mr-2"></i> Server Logs (Real-time)
+                        </div>
+                        <div id="log-container" class="space-y-1">
+                            <div>Sẵn sàng huấn luyện. Hệ thống đang chờ lệnh...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let interval;
+        let progress = 0;
+        const btnStart = document.getElementById('btn-start');
+        const btnStop = document.getElementById('btn-stop');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const logContainer = document.getElementById('log-container');
+
+        function addLog(msg) {
+            const div = document.createElement('div');
+            const time = new Date().toLocaleTimeString();
+            div.textContent = `[${time}] ${msg}`;
+            logContainer.appendChild(div);
+            logContainer.parentElement.scrollTop = logContainer.parentElement.scrollHeight;
+        }
+
+        function startTraining() {
+            btnStart.disabled = true;
+            btnStart.classList.add('opacity-50', 'cursor-not-allowed');
+            btnStop.disabled = false;
+            btnStop.classList.remove('opacity-50', 'cursor-not-allowed');
+            
+            progress = 0;
+            logContainer.innerHTML = '';
+            addLog("Bắt đầu quá trình huấn luyện...");
+            addLog("Đang tải Dataset (10,542 ảnh)...");
+
+            interval = setInterval(() => {
+                progress += Math.floor(Math.random() * 5);
+                if (progress >= 100) {
+                    progress = 100;
+                    updateUI();
+                    stopTraining(true);
+                    addLog("Hoàn thành huấn luyện mô hình! 🎉");
+                } else {
+                    updateUI();
+                    const epoch = Math.floor(progress/10);
+                    const loss = (Math.random() * 0.5).toFixed(4);
+                    const acc = (50 + progress * 0.4).toFixed(2);
+                    addLog(`Epoch ${epoch}/10: loss=${loss}, accuracy=${acc}%`);
+                }
+            }, 1000);
+        }
+
+        function updateUI() {
+            progressBar.style.width = `${progress}%`;
+            progressText.textContent = `${progress}%`;
+        }
+
+        function stopTraining(autoFinish = false) {
+            clearInterval(interval);
+            btnStart.disabled = false;
+            btnStart.classList.remove('opacity-50', 'cursor-not-allowed');
+            btnStop.disabled = true;
+            btnStop.classList.add('opacity-50', 'cursor-not-allowed');
+            if(!autoFinish) {
+                addLog("⚠️ Đã dừng huấn luyện bởi người dùng.");
+            }
+        }
+    </script>
+</body>
+</html>

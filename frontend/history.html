@@ -1,116 +1,99 @@
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Lịch sử nhận diện</title>
-
-    <link rel="stylesheet" href="style.css">
+    <title>Lịch sử - AI Vision</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
+<body class="bg-slate-50 font-sans text-slate-800">
+    <!-- Navbar -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl font-bold"><span class="text-blue-600">AI</span> Vision</span>
+                    <div class="hidden md:ml-10 md:flex md:space-x-8">
+                        <a href="upload.html" class="border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Nhận diện</a>
+                        <a href="history.html" class="border-blue-500 text-slate-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Lịch sử</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
 
-<body>
-
-    <!-- Thanh menu -->
-    <header>
-
-        <div class="logo">
-            🚦 Traffic Sign AI
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight text-slate-900">Quản lý Lịch sử Nhận diện</h1>
+                <p class="text-slate-500 mt-2">Xem lại các kết quả đã phân tích trước đây.</p>
+            </div>
+            <!-- Filter -->
+            <div class="flex gap-2">
+                <div class="relative">
+                    <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" placeholder="Tìm kiếm nhãn..." class="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none w-64">
+                </div>
+                <select class="border border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <option>Tất cả trạng thái</option>
+                    <option>Thành công</option>
+                    <option>Thất bại</option>
+                </select>
+            </div>
         </div>
 
-        <nav>
-            <a href="index.html">Trang chủ</a>
-            <a href="history.html">Lịch sử nhận diện</a>
-            <a href="#">Đăng xuất</a>
-        </nav>
-
-    </header>
-
-
-    <!-- Nội dung -->
-    <main>
-
-        <h1>LỊCH SỬ NHẬN DIỆN</h1>
-
-        <p class="description">
-            Danh sách các lần nhận diện biển báo giao thông
-        </p>
-
-
-        <!-- Danh sách lịch sử -->
-        <section class="recognition">
-
-            <h2>Lịch sử nhận diện</h2>
-
-            <div class="result-box">
-
-                <p>
-                    📷 Biển báo cấm đi ngược chiều
-                </p>
-
-                <p>
-                    Độ chính xác: <strong>95%</strong>
-                </p>
-
-                <p>
-                    Thời gian: <strong>02/10/2026 01:50</strong>
-                </p>
-
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200 text-sm uppercase tracking-wider text-slate-500">
+                            <th class="p-4 font-medium">Hình ảnh</th>
+                            <th class="p-4 font-medium">Kết quả nhận diện</th>
+                            <th class="p-4 font-medium">Độ chính xác</th>
+                            <th class="p-4 font-medium">Thời gian</th>
+                            <th class="p-4 font-medium text-right">Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200">
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="p-4"><img src="https://images.unsplash.com/photo-1543083477-4f785aeafaa9?w=100" class="w-16 h-12 object-cover rounded border"></td>
+                            <td class="p-4 font-medium">Biển báo Tốc độ 50</td>
+                            <td class="p-4">98.5%</td>
+                            <td class="p-4 text-slate-500">2026-10-02 10:30</td>
+                            <td class="p-4 text-right"><span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">Thành công</span></td>
+                        </tr>
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="p-4"><img src="https://images.unsplash.com/photo-1515516089376-88db1e26e974?w=100" class="w-16 h-12 object-cover rounded border"></td>
+                            <td class="p-4 font-medium">Cấm đi ngược chiều</td>
+                            <td class="p-4">99.2%</td>
+                            <td class="p-4 text-slate-500">2026-10-01 15:45</td>
+                            <td class="p-4 text-right"><span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">Thành công</span></td>
+                        </tr>
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="p-4"><div class="w-16 h-12 bg-slate-200 rounded border flex items-center justify-center text-slate-400"><i class="fa-solid fa-image"></i></div></td>
+                            <td class="p-4 font-medium text-slate-400">Không xác định</td>
+                            <td class="p-4">45.1%</td>
+                            <td class="p-4 text-slate-500">2026-10-01 09:12</td>
+                            <td class="p-4 text-right"><span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-semibold">Thất bại</span></td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-
-
-            <div class="result-box">
-
-                <p>
-                    📷 Biển báo giới hạn tốc độ
-                </p>
-
-                <p>
-                    Độ chính xác: <strong>92%</strong>
-                </p>
-
-                <p>
-                    Thời gian: <strong>02/10/2026 01:45</strong>
-                </p>
-
+            
+            <!-- Pagination -->
+            <div class="p-4 border-t border-slate-200 flex items-center justify-between">
+                <span class="text-sm text-slate-500">Hiển thị 1-3 trong số 24 kết quả</span>
+                <div class="flex space-x-1">
+                    <button class="px-3 py-1 border border-slate-300 rounded text-slate-500 hover:bg-slate-50" disabled><i class="fa-solid fa-chevron-left"></i></button>
+                    <button class="px-3 py-1 bg-blue-600 text-white rounded font-medium">1</button>
+                    <button class="px-3 py-1 border border-slate-300 rounded text-slate-700 hover:bg-slate-50">2</button>
+                    <button class="px-3 py-1 border border-slate-300 rounded text-slate-700 hover:bg-slate-50">3</button>
+                    <button class="px-3 py-1 border border-slate-300 rounded text-slate-700 hover:bg-slate-50"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
             </div>
-
-
-            <div class="result-box">
-
-                <p>
-                    📷 Biển báo cấm rẽ trái
-                </p>
-
-                <p>
-                    Độ chính xác: <strong>89%</strong>
-                </p>
-
-                <p>
-                    Thời gian: <strong>02/10/2026 01:40</strong>
-                </p>
-
-            </div>
-
-        </section>
-
+        </div>
     </main>
-
-
-    <!-- Chân trang -->
-    <footer>
-
-        <p>
-            Đề tài: Xây dựng chương trình nhận diện biển báo giao thông
-        </p>
-
-        <p>
-            Xử lý ảnh và thị giác máy tính
-        </p>
-
-    </footer>
-
 </body>
-
 </html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Dữ liệu - Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-50 font-sans text-slate-800 flex h-screen overflow-hidden">
+    
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col hidden md:flex">
+        <div class="h-16 flex items-center px-6 border-b border-slate-800">
+            <span class="text-2xl font-bold"><span class="text-blue-400">AI</span> Admin</span>
+        </div>
+        <nav class="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+            <a href="admin-data.html" class="flex items-center px-3 py-3 bg-blue-600 text-white rounded-lg">
+                <i class="fa-solid fa-database w-6"></i> Quản lý Dataset
+            </a>
+            <a href="admin-train.html" class="flex items-center px-3 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-lg transition">
+                <i class="fa-solid fa-microchip w-6"></i> Huấn luyện Model
+            </a>
+            <a href="admin-eval.html" class="flex items-center px-3 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-lg transition">
+                <i class="fa-solid fa-chart-simple w-6"></i> Đánh giá Model
+            </a>
+        </nav>
+        <div class="p-4 border-t border-slate-800">
+            <a href="login.html" class="flex items-center px-3 py-2 text-slate-400 hover:text-white transition">
+                <i class="fa-solid fa-right-from-bracket w-6"></i> Đăng xuất
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content wrapper -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Topbar -->
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-10">
+            <button class="md:hidden text-slate-500 hover:text-slate-700">
+                <i class="fa-solid fa-bars text-xl"></i>
+            </button>
+            <div class="hidden md:block"></div>
+            <div class="flex items-center space-x-4">
+                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold border border-blue-200">
+                    AD
+                </div>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <main class="flex-1 overflow-y-auto p-6 md:p-8">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold tracking-tight text-slate-900">Quản lý Dữ liệu (Dataset)</h1>
+                    <p class="text-slate-500 mt-1">Xem, thêm, sửa, xóa các nhãn dữ liệu huấn luyện.</p>
+                </div>
+                <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow transition flex items-center whitespace-nowrap">
+                    <i class="fa-solid fa-plus mr-2"></i> Thêm Nhãn mới
+                </button>
+            </div>
+
+            <!-- Search & Filter -->
+            <div class="mb-6 flex flex-col sm:flex-row gap-4">
+                <div class="relative w-full max-w-md">
+                    <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" placeholder="Tìm kiếm nhãn..." class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none shadow-sm">
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-sm uppercase tracking-wider text-slate-500">
+                                <th class="p-4 font-medium">ID</th>
+                                <th class="p-4 font-medium">Tên Nhãn (Label)</th>
+                                <th class="p-4 font-medium">Số lượng mẫu</th>
+                                <th class="p-4 font-medium">Ngày cập nhật</th>
+                                <th class="p-4 font-medium text-right">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200">
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="p-4 font-medium">DS-001</td>
+                                <td class="p-4">Tốc độ tối đa 50</td>
+                                <td class="p-4">1,250</td>
+                                <td class="p-4 text-slate-500">2026-09-10</td>
+                                <td class="p-4 text-right">
+                                    <button class="text-blue-600 hover:text-blue-800 p-2"><i class="fa-solid fa-pen-to-square"></i></button>
+                                    <button class="text-red-600 hover:text-red-800 p-2 ml-1"><i class="fa-solid fa-trash-can"></i></button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="p-4 font-medium">DS-002</td>
+                                <td class="p-4">Cấm đi ngược chiều</td>
+                                <td class="p-4">980</td>
+                                <td class="p-4 text-slate-500">2026-09-12</td>
+                                <td class="p-4 text-right">
+                                    <button class="text-blue-600 hover:text-blue-800 p-2"><i class="fa-solid fa-pen-to-square"></i></button>
+                                    <button class="text-red-600 hover:text-red-800 p-2 ml-1"><i class="fa-solid fa-trash-can"></i></button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="p-4 font-medium">DS-003</td>
+                                <td class="p-4">Dừng lại (Stop)</td>
+                                <td class="p-4">850</td>
+                                <td class="p-4 text-slate-500">2026-09-15</td>
+                                <td class="p-4 text-right">
+                                    <button class="text-blue-600 hover:text-blue-800 p-2"><i class="fa-solid fa-pen-to-square"></i></button>
+                                    <button class="text-red-600 hover:text-red-800 p-2 ml-1"><i class="fa-solid fa-trash-can"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
