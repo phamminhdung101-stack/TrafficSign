@@ -231,9 +231,16 @@
             }, 3000);
         }
 
-        function processRecognition() {
+        async function processRecognition() {
             if(!currentFile) {
                 showToast("Vui lòng tải lên dữ liệu hoặc chụp ảnh từ camera!");
+                return;
+            }
+
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                showToast("Bạn chưa đăng nhập. Vui lòng đăng nhập lại.");
+                setTimeout(() => window.location.href = 'login.html', 2000);
                 return;
             }
 
@@ -243,11 +250,54 @@
             btn.disabled = true;
             btnText.innerHTML = '<span class="loader"></span> Đang xử lý...';
             
-            // Simulate API call
-            setTimeout(() => {
-                // Redirect to results
-                window.location.href = "result.html";
-            }, 2000);
+            const formData = new FormData();
+            
+            if (currentFile === "camera_snapshot") {
+                const canvas = document.getElementById('webcam-canvas');
+                const dataUrl = canvas.toDataURL('image/jpeg');
+                const blob = await (await fetch(dataUrl)).blob();
+                formData.append('file', blob, 'camera_capture.jpg');
+            } else {
+                formData.append('file', currentFile);
+            }
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/detect?confidence=0.25', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (currentFile !== "camera_snapshot") {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            localStorage.setItem('last_image_data', e.target.result);
+                            localStorage.setItem('last_detection_result', JSON.stringify(data));
+                            window.location.href = "result.html";
+                        };
+                        reader.readAsDataURL(currentFile);
+                    } else {
+                        const canvas = document.getElementById('webcam-canvas');
+                        localStorage.setItem('last_image_data', canvas.toDataURL('image/jpeg'));
+                        localStorage.setItem('last_detection_result', JSON.stringify(data));
+                        window.location.href = "result.html";
+                    }
+                } else {
+                    const error = await response.json();
+                    showToast('Lỗi nhận diện: ' + (error.detail || 'Lỗi không xác định'));
+                }
+            } catch (error) {
+                console.error(error);
+                showToast('Lỗi kết nối đến máy chủ API.');
+            } finally {
+                btn.disabled = false;
+                btnText.innerHTML = 'Thực hiện nhận diện';
+            }
         }
     </script>
 </body>

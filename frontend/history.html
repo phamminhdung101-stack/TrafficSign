@@ -32,15 +32,7 @@
             </div>
             <!-- Filter -->
             <div class="flex gap-2">
-                <div class="relative">
-                    <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
-                    <input type="text" placeholder="Tìm kiếm nhãn..." class="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none w-64">
-                </div>
-                <select class="border border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
-                    <option>Tất cả trạng thái</option>
-                    <option>Thành công</option>
-                    <option>Thất bại</option>
-                </select>
+                <button onclick="loadHistory()" class="px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition"><i class="fa-solid fa-rotate-right mr-1"></i> Tải lại</button>
             </div>
         </div>
 
@@ -51,49 +43,83 @@
                         <tr class="bg-slate-50 border-b border-slate-200 text-sm uppercase tracking-wider text-slate-500">
                             <th class="p-4 font-medium">Hình ảnh</th>
                             <th class="p-4 font-medium">Kết quả nhận diện</th>
-                            <th class="p-4 font-medium">Độ chính xác</th>
+                            <th class="p-4 font-medium">Độ chính xác cao nhất</th>
                             <th class="p-4 font-medium">Thời gian</th>
-                            <th class="p-4 font-medium text-right">Trạng thái</th>
+                            <th class="p-4 font-medium text-right">Loại nguồn</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-200">
-                        <tr class="hover:bg-slate-50 transition">
-                            <td class="p-4"><img src="https://images.unsplash.com/photo-1543083477-4f785aeafaa9?w=100" class="w-16 h-12 object-cover rounded border"></td>
-                            <td class="p-4 font-medium">Biển báo Tốc độ 50</td>
-                            <td class="p-4">98.5%</td>
-                            <td class="p-4 text-slate-500">2026-10-02 10:30</td>
-                            <td class="p-4 text-right"><span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">Thành công</span></td>
-                        </tr>
-                        <tr class="hover:bg-slate-50 transition">
-                            <td class="p-4"><img src="https://images.unsplash.com/photo-1515516089376-88db1e26e974?w=100" class="w-16 h-12 object-cover rounded border"></td>
-                            <td class="p-4 font-medium">Cấm đi ngược chiều</td>
-                            <td class="p-4">99.2%</td>
-                            <td class="p-4 text-slate-500">2026-10-01 15:45</td>
-                            <td class="p-4 text-right"><span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">Thành công</span></td>
-                        </tr>
-                        <tr class="hover:bg-slate-50 transition">
-                            <td class="p-4"><div class="w-16 h-12 bg-slate-200 rounded border flex items-center justify-center text-slate-400"><i class="fa-solid fa-image"></i></div></td>
-                            <td class="p-4 font-medium text-slate-400">Không xác định</td>
-                            <td class="p-4">45.1%</td>
-                            <td class="p-4 text-slate-500">2026-10-01 09:12</td>
-                            <td class="p-4 text-right"><span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-semibold">Thất bại</span></td>
+                    <tbody id="history-tbody" class="divide-y divide-slate-200">
+                        <tr>
+                            <td colspan="5" class="p-8 text-center text-slate-500">
+                                <i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i><br>Đang tải dữ liệu...
+                            </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-            
-            <!-- Pagination -->
-            <div class="p-4 border-t border-slate-200 flex items-center justify-between">
-                <span class="text-sm text-slate-500">Hiển thị 1-3 trong số 24 kết quả</span>
-                <div class="flex space-x-1">
-                    <button class="px-3 py-1 border border-slate-300 rounded text-slate-500 hover:bg-slate-50" disabled><i class="fa-solid fa-chevron-left"></i></button>
-                    <button class="px-3 py-1 bg-blue-600 text-white rounded font-medium">1</button>
-                    <button class="px-3 py-1 border border-slate-300 rounded text-slate-700 hover:bg-slate-50">2</button>
-                    <button class="px-3 py-1 border border-slate-300 rounded text-slate-700 hover:bg-slate-50">3</button>
-                    <button class="px-3 py-1 border border-slate-300 rounded text-slate-700 hover:bg-slate-50"><i class="fa-solid fa-chevron-right"></i></button>
-                </div>
-            </div>
         </div>
     </main>
+    <script>
+        async function loadHistory() {
+            const tbody = document.getElementById('history-tbody');
+            tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-slate-500"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i><br>Đang tải dữ liệu...</td></tr>';
+            
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-red-500">Vui lòng đăng nhập để xem lịch sử.</td></tr>';
+                return;
+            }
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/history?limit=20&offset=0', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    tbody.innerHTML = '';
+                    
+                    if (data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-slate-500">Chưa có lịch sử nhận diện nào.</td></tr>';
+                        return;
+                    }
+
+                    data.forEach(item => {
+                        let bestResult = { code: 'Không nhận diện được', confidence: 0 };
+                        if (item.results && item.results.length > 0) {
+                            bestResult = item.results.reduce((prev, current) => (prev.confidence > current.confidence) ? prev : current);
+                        }
+
+                        const date = new Date(item.detected_at).toLocaleString('vi-VN');
+                        const imgIcon = item.source_type === 'camera' ? 'fa-camera' : 'fa-image';
+
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="p-4">
+                                    <div class="w-16 h-12 bg-slate-100 rounded border flex items-center justify-center text-slate-400" title="${item.source_path}">
+                                        <i class="fa-solid ${imgIcon} text-xl"></i>
+                                    </div>
+                                </td>
+                                <td class="p-4 font-medium">${bestResult.code}</td>
+                                <td class="p-4">${(bestResult.confidence * 100).toFixed(1)}%</td>
+                                <td class="p-4 text-slate-500">${date}</td>
+                                <td class="p-4 text-right">
+                                    <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold uppercase">${item.source_type}</span>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    const err = await response.json();
+                    tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-red-500">Lỗi: ${err.detail}</td></tr>`;
+                }
+            } catch (e) {
+                console.error(e);
+                tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-red-500">Lỗi kết nối đến máy chủ.</td></tr>';
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", loadHistory);
+    </script>
 </body>
 </html>

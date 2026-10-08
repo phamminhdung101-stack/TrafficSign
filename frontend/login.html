@@ -20,14 +20,14 @@
                 <h1 class="text-3xl font-bold text-slate-800"><span class="text-blue-600">AI</span> Vision</h1>
                 <p class="text-slate-500 mt-2">Đăng nhập để truy cập hệ thống nhận diện</p>
             </div>
-            <form action="upload.html" class="space-y-6">
+            <form class="space-y-6">
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-2">Email</label>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Tên đăng nhập / Email</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i class="fa-regular fa-envelope text-slate-400"></i>
                         </div>
-                        <input type="email" class="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="nhap@email.com" required>
+                        <input id="username" type="text" class="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="Tên đăng nhập" required>
                     </div>
                 </div>
                 <div>
@@ -39,7 +39,7 @@
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i class="fa-solid fa-lock text-slate-400"></i>
                         </div>
-                        <input type="password" class="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="••••••••" required>
+                        <input id="password" type="password" class="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="••••••••" required>
                     </div>
                 </div>
                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex justify-center items-center">
@@ -51,5 +51,55 @@
             </div>
         </div>
     </div>
+    <script>
+        document.querySelector('form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            const btn = document.querySelector('button[type="submit"]');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Đang đăng nhập...';
+            btn.disabled = true;
+
+            try {
+                const formData = new URLSearchParams();
+                formData.append('username', username);
+                formData.append('password', password);
+
+                const response = await fetch('http://127.0.0.1:8000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('access_token', data.access_token);
+                    window.location.href = 'upload.html';
+                } else {
+                    const error = await response.json();
+                    let errorMsg = 'Vui lòng kiểm tra lại thông tin.';
+                    if (error.detail) {
+                        if (typeof error.detail === 'string') {
+                            errorMsg = error.detail;
+                        } else if (Array.isArray(error.detail)) {
+                            errorMsg = error.detail.map(e => `${e.loc[e.loc.length-1]}: ${e.msg}`).join(', ');
+                        } else {
+                            errorMsg = JSON.stringify(error.detail);
+                        }
+                    }
+                    alert('Đăng nhập thất bại: ' + errorMsg);
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Lỗi kết nối đến máy chủ.');
+            } finally {
+                btn.innerHTML = 'Đăng nhập <i class="fa-solid fa-arrow-right ml-2"></i>';
+                btn.disabled = false;
+            }
+        });
+    </script>
 </body>
 </html>

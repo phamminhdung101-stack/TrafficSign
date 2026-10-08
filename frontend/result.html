@@ -30,47 +30,127 @@
                 <a href="upload.html" class="text-blue-600 hover:underline mb-2 inline-block"><i class="fa-solid fa-arrow-left mr-1"></i> Quay lại</a>
                 <h1 class="text-3xl font-bold tracking-tight text-slate-900">Kết quả Nhận diện</h1>
             </div>
-            <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow transition flex items-center">
+            <button id="download-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow transition flex items-center">
                 <i class="fa-solid fa-download mr-2"></i> Tải ảnh xuống
             </button>
         </div>
 
         <div class="bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
             <!-- Visual Result -->
-            <div class="rounded-lg overflow-hidden border border-slate-200 bg-slate-100 flex items-center justify-center min-h-[300px] relative">
-                <!-- Bounding Box Simulation -->
-                <div class="absolute top-[20%] left-[30%] w-[40%] h-[50%] border-4 border-green-500 rounded bg-green-500/20 flex flex-col justify-end p-1">
-                    <span class="bg-green-500 text-white text-xs font-bold px-1 rounded inline-block w-max">Tốc độ tối đa 50 98%</span>
-                </div>
-                <img src="https://images.unsplash.com/photo-1543083477-4f785aeafaa9?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Traffic Sign" class="w-full h-full object-cover">
+            <div class="rounded-lg border border-slate-200 bg-slate-100 flex items-center justify-center min-h-[300px] relative overflow-hidden" id="image-container">
+                <img id="result-image" src="" alt="Traffic Sign" class="max-w-full max-h-full object-contain">
+                <!-- Bounding boxes will be injected here -->
+                <div id="bbox-container" class="absolute inset-0 pointer-events-none w-full h-full"></div>
             </div>
 
             <!-- Details -->
-            <div class="flex flex-col justify-center space-y-6">
+            <div class="flex flex-col justify-start space-y-6">
                 <div>
                     <h3 class="text-lg font-semibold text-slate-500 uppercase tracking-wide">Đối tượng phát hiện</h3>
-                    <div class="mt-2 p-4 bg-green-50 border border-green-200 rounded-lg">
-                        <h2 class="text-2xl font-bold text-green-700">Biển báo Tốc độ tối đa 50</h2>
-                        <p class="text-green-600 mt-1 flex items-center"><i class="fa-solid fa-check-circle mr-2"></i> Độ chính xác: 98.5%</p>
+                    <div id="detection-list" class="mt-2 space-y-3">
+                        <!-- Detected items will go here -->
+                        <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg text-slate-500 text-center">
+                            Đang tải kết quả...
+                        </div>
                     </div>
                 </div>
 
-                <div class="space-y-3">
-                    <div class="flex justify-between py-2 border-b border-slate-100">
-                        <span class="text-slate-500">Thời gian xử lý</span>
-                        <span class="font-medium">1.2 giây</span>
-                    </div>
+                <div class="space-y-3 mt-6">
                     <div class="flex justify-between py-2 border-b border-slate-100">
                         <span class="text-slate-500">Model sử dụng</span>
-                        <span class="font-medium">YOLOv8x - Custom</span>
+                        <span class="font-medium">YOLO</span>
                     </div>
                     <div class="flex justify-between py-2 border-b border-slate-100">
                         <span class="text-slate-500">Độ phân giải ảnh</span>
-                        <span class="font-medium">1920 x 1080</span>
+                        <span class="font-medium" id="img-resolution">-</span>
                     </div>
                 </div>
             </div>
         </div>
     </main>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const imageData = localStorage.getItem('last_image_data');
+            const resultDataStr = localStorage.getItem('last_detection_result');
+            
+            if (!imageData || !resultDataStr) {
+                alert("Không tìm thấy dữ liệu nhận diện.");
+                window.location.href = "upload.html";
+                return;
+            }
+            
+            const resultData = JSON.parse(resultDataStr);
+            const imgElement = document.getElementById('result-image');
+            imgElement.src = imageData;
+            
+            document.getElementById('img-resolution').textContent = `${resultData.image_width} x ${resultData.image_height}`;
+            
+            imgElement.onload = () => {
+                const bboxContainer = document.getElementById('bbox-container');
+                const detectionList = document.getElementById('detection-list');
+                
+                // Calculate display size and offset for bounding boxes
+                const imgRect = imgElement.getBoundingClientRect();
+                const containerRect = document.getElementById('image-container').getBoundingClientRect();
+                
+                const scaleX = imgRect.width / resultData.image_width;
+                const scaleY = imgRect.height / resultData.image_height;
+                
+                const offsetX = imgRect.left - containerRect.left;
+                const offsetY = imgRect.top - containerRect.top;
+                
+                detectionList.innerHTML = '';
+                
+                if (resultData.detections.length === 0) {
+                    detectionList.innerHTML = `
+                        <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
+                            <h2 class="text-xl font-bold text-yellow-700">Không tìm thấy biển báo nào</h2>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                resultData.detections.forEach(det => {
+                    // Draw bounding box
+                    const x = offsetX + (det.x1 * scaleX);
+                    const y = offsetY + (det.y1 * scaleY);
+                    const width = (det.x2 - det.x1) * scaleX;
+                    const height = (det.y2 - det.y1) * scaleY;
+                    
+                    const box = document.createElement('div');
+                    box.className = 'absolute border-2 border-green-500 bg-green-500/20';
+                    box.style.left = `${x}px`;
+                    box.style.top = `${y}px`;
+                    box.style.width = `${width}px`;
+                    box.style.height = `${height}px`;
+                    
+                    const label = document.createElement('span');
+                    label.className = 'absolute bottom-full left-0 bg-green-500 text-white text-xs font-bold px-1 whitespace-nowrap -translate-y-1';
+                    label.textContent = `${det.code} ${Math.round(det.confidence * 100)}%`;
+                    
+                    box.appendChild(label);
+                    bboxContainer.appendChild(box);
+                    
+                    // Add details
+                    const detHtml = `
+                        <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
+                            <h2 class="text-xl font-bold text-green-700">${det.code}</h2>
+                            <p class="text-green-600 mt-1 flex items-center"><i class="fa-solid fa-check-circle mr-2"></i> Độ chính xác: ${(det.confidence * 100).toFixed(1)}%</p>
+                        </div>
+                    `;
+                    detectionList.innerHTML += detHtml;
+                });
+            };
+
+            document.getElementById('download-btn').addEventListener('click', () => {
+                const a = document.createElement('a');
+                a.href = imageData;
+                a.download = 'ket-qua-nhan-dien.jpg';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            });
+        });
+    </script>
 </body>
 </html>
