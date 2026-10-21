@@ -94,6 +94,21 @@
                     <div class="relative rounded-xl overflow-hidden border bg-black shadow-lg w-full max-w-lg aspect-video flex justify-center items-center">
                         <video id="webcam-video" autoplay playsinline class="w-full h-full object-contain hidden"></video>
                         <p id="cam-placeholder" class="text-slate-400"><i class="fa-solid fa-video-slash mb-2 block text-center text-3xl"></i> Bật camera để xem trước</p>
+                        
+                        <!-- Camera Viewfinder Overlay -->
+                        <div id="cam-viewfinder" class="absolute inset-0 pointer-events-none hidden flex flex-col items-center justify-center">
+                            <div class="w-48 h-48 border-2 border-dashed border-blue-400 rounded-2xl relative shadow-inner flex items-center justify-center bg-blue-500/10">
+                                <span class="text-xs text-blue-200 bg-black/70 px-2.5 py-1 rounded backdrop-blur font-medium">Khung ngắm biển báo</span>
+                                <div class="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-blue-400"></div>
+                                <div class="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-blue-400"></div>
+                                <div class="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-blue-400"></div>
+                                <div class="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-blue-400"></div>
+                            </div>
+                            <p class="text-xs text-white/90 bg-black/60 px-3 py-1 rounded-full mt-3 backdrop-blur shadow">
+                                <i class="fa-solid fa-hand mr-1 text-blue-400"></i> Đặt biển báo vào giữa khung, khoảng cách 30-50cm
+                            </p>
+                        </div>
+                        
                         <canvas id="webcam-canvas" class="hidden"></canvas>
                     </div>
                     
@@ -209,6 +224,7 @@
                 video.srcObject = stream;
                 video.classList.remove('hidden');
                 document.getElementById('cam-placeholder').classList.add('hidden');
+                document.getElementById('cam-viewfinder').classList.remove('hidden');
                 document.getElementById('btn-start-cam').classList.add('hidden');
                 document.getElementById('btn-capture').classList.remove('hidden');
             } catch (err) {

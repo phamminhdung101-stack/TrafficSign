@@ -29,11 +29,14 @@ class TrafficSignDetector:
         with self._lock:
             self._model = None
 
-    def _run_yolo(self, image: np.ndarray, confidence: float) -> list[dict[str, Any]]:
+    def _run_yolo(self, image: np.ndarray, confidence: float, imgsz: int | None = None) -> list[dict[str, Any]]:
         with self._lock:
             model = self._load_model()
             try:
-                results = model.predict(source=image, conf=confidence, verbose=False)
+                kwargs: dict[str, Any] = {"source": image, "conf": confidence, "verbose": False}
+                if imgsz is not None:
+                    kwargs["imgsz"] = imgsz
+                results = model.predict(**kwargs)
             except Exception as exc:
                 logger.exception("YOLO inference failed")
                 raise ModelUnavailableError("The configured model failed during inference.") from exc
@@ -64,15 +67,20 @@ class TrafficSignDetector:
         elif not isinstance(image, np.ndarray):
             image = np.asarray(image)
 
-        detections = self._run_yolo(image, confidence)
+        h, w = image.shape[:2]
 
-        # Adaptive padding fallback for tight crops / small sign icons
-        if not detections and (image.shape[0] < 450 or image.shape[1] < 450):
-            h, w = image.shape[:2]
+        # 1. High-resolution adaptive imgsz:
+        # Prevents downsampling small objects in 1280x720 / 1080p frames to 20-30px
+        max_dim = max(h, w)
+        imgsz = max(640, min(1280, max_dim))
+        detections = self._run_yolo(image, confidence, imgsz=imgsz)
+
+        # 2. Adaptive padding fallback for tight crops / small sign icons (<450px)
+        if not detections and (h < 450 or w < 450):
             pad_y = max(30, int(h * 0.45))
             pad_x = max(30, int(w * 0.45))
             padded = cv2.copyMakeBorder(image, pad_y, pad_y, pad_x, pad_x, cv2.BORDER_REPLICATE)
-            raw_dets = self._run_yolo(padded, confidence)
+            raw_dets = self._run_yolo(padded, confidence, imgsz=640)
             for d in raw_dets:
                 adj_x1 = max(0.0, d["x1"] - pad_x)
                 adj_y1 = max(0.0, d["y1"] - pad_y)
@@ -84,6 +92,20 @@ class TrafficSignDetector:
                     d["x2"] = adj_x2
                     d["y2"] = adj_y2
                     detections.append(d)
+
+        # 3. Central-region zoom fallback for wide-angle camera captures (>=700px):
+        # When users present signs in front of a wide webcam, signs are centered but distant.
+        if not detections and (h >= 700 or w >= 700):
+            y1_c, y2_c = int(h * 0.15), int(h * 0.85)
+            x1_c, x2_c = int(w * 0.15), int(w * 0.85)
+            center_crop = image[y1_c:y2_c, x1_c:x2_c]
+            center_dets = self._run_yolo(center_crop, confidence, imgsz=640)
+            for d in center_dets:
+                d["x1"] += float(x1_c)
+                d["y1"] += float(y1_c)
+                d["x2"] += float(x1_c)
+                d["y2"] += float(y1_c)
+                detections.append(d)
 
         return detections
 

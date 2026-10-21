@@ -161,9 +161,21 @@
                 
                 if (!resultData.detections || resultData.detections.length === 0) {
                     detectionList.innerHTML = `
-                        <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
-                            <h2 class="text-xl font-bold text-yellow-700">Không tìm thấy biển báo nào</h2>
-                            <p class="text-sm text-yellow-600 mt-1">Ảnh có thể không chứa biển báo hoặc độ tin cậy dưới ngưỡng quy định.</p>
+                        <div class="p-5 bg-amber-50 border border-amber-200 rounded-xl">
+                            <div class="text-center mb-4">
+                                <i class="fa-solid fa-triangle-exclamation text-amber-500 text-3xl mb-2 block"></i>
+                                <h2 class="text-lg font-bold text-amber-900">Không tìm thấy biển báo nào</h2>
+                                <p class="text-sm text-amber-700 mt-1">Biển báo có thể quá xa, bị lóa phản quang hoặc bị che khuất viền.</p>
+                            </div>
+                            <div class="bg-white/90 rounded-lg p-3.5 text-xs text-slate-700 space-y-2 border border-amber-100 shadow-sm">
+                                <div class="font-semibold text-slate-900 flex items-center">
+                                    <i class="fa-solid fa-lightbulb text-amber-500 mr-1.5 text-sm"></i> Hướng dẫn để nhận diện chính xác:
+                                </div>
+                                <p>• <strong>Kích thước:</strong> Khi chụp bằng camera, hãy đưa biển báo lại gần (chiếm từ 25% đến 50% khung hình).</p>
+                                <p>• <strong>Ánh sáng & Phản xạ:</strong> Tránh để đèn phòng chiếu lóa màn hình điện thoại hoặc bề mặt biển báo.</p>
+                                <p>• <strong>Toàn vẹn góc cạnh:</strong> Đảm bảo toàn bộ hình tròn/tam giác nằm trọn trong ảnh, không bị cắt xén biên.</p>
+                                <p>• <strong>Tùy chỉnh:</strong> Quay lại trang trước để điều chỉnh <em>Ngưỡng tin cậy (Confidence)</em> thích hợp.</p>
+                            </div>
                         </div>
                     `;
                     return;
