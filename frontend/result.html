@@ -37,10 +37,12 @@
 
         <div class="bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
             <!-- Visual Result -->
-            <div class="rounded-lg border border-slate-200 bg-slate-100 flex items-center justify-center min-h-[300px] relative overflow-hidden" id="image-container">
-                <img id="result-image" src="" alt="Traffic Sign" class="max-w-full max-h-full object-contain">
-                <!-- Bounding boxes will be injected here -->
-                <div id="bbox-container" class="absolute inset-0 pointer-events-none w-full h-full"></div>
+            <div class="rounded-lg border border-slate-200 bg-slate-100 flex items-center justify-center min-h-[300px] p-2 overflow-hidden" id="image-container">
+                <div class="relative inline-block max-w-full" id="image-wrapper">
+                    <img id="result-image" src="" alt="Traffic Sign" class="block max-w-full h-auto rounded">
+                    <!-- Bounding boxes will be injected here -->
+                    <div id="bbox-container" class="absolute inset-0 pointer-events-none w-full h-full"></div>
+                </div>
             </div>
 
             <!-- Details -->
@@ -58,17 +60,81 @@
                 <div class="space-y-3 mt-6">
                     <div class="flex justify-between py-2 border-b border-slate-100">
                         <span class="text-slate-500">Model sử dụng</span>
-                        <span class="font-medium">YOLO</span>
+                        <span class="font-medium">YOLOv8</span>
                     </div>
                     <div class="flex justify-between py-2 border-b border-slate-100">
                         <span class="text-slate-500">Độ phân giải ảnh</span>
                         <span class="font-medium" id="img-resolution">-</span>
                     </div>
+                    <div class="flex justify-between py-2 border-b border-slate-100">
+                        <span class="text-slate-500">Số lượng phát hiện</span>
+                        <span class="font-medium" id="det-count">0</span>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
+
     <script>
+        const SIGN_NAMES = {
+            'DP-135': 'Hết tất cả các lệnh cấm',
+            'P-102': 'Cấm đi ngược chiều',
+            'P-103a': 'Cấm xe ô tô',
+            'P-103b': 'Cấm xe ô tô rẽ phải',
+            'P-103c': 'Cấm xe ô tô rẽ trái',
+            'P-104': 'Cấm xe máy',
+            'P-106a': 'Cấm xe ô tô tải',
+            'P-106b': 'Cấm xe ô tô tải (theo trọng lượng)',
+            'P-107a': 'Cấm xe ô tô khách và xe ô tô tải',
+            'P-112': 'Cấm người đi bộ',
+            'P-115': 'Hạn chế trọng lượng xe',
+            'P-117': 'Hạn chế chiều cao',
+            'P-123a': 'Cấm rẽ trái',
+            'P-123b': 'Cấm rẽ phải',
+            'P-124a': 'Cấm quay đầu xe',
+            'P-124b': 'Cấm xe ô tô quay đầu',
+            'P-124c': 'Cấm rẽ trái và quay đầu xe',
+            'P-127': 'Tốc độ tối đa cho phép',
+            'P-128': 'Cấm sử dụng còi',
+            'P-130': 'Cấm dừng xe và đỗ xe',
+            'P-131a': 'Cấm đỗ xe',
+            'P-137': 'Cấm rẽ trái và rẽ phải',
+            'P-245a': 'Đi chậm',
+            'R-301c': 'Các xe chỉ được rẽ trái',
+            'R-301d': 'Các xe chỉ được rẽ phải',
+            'R-301e': 'Các xe chỉ được rẽ trái',
+            'R-302a': 'Hướng phải đi vòng sang phải',
+            'R-302b': 'Hướng phải đi vòng sang trái',
+            'R-303': 'Nơi giao nhau chạy theo vòng xuyến',
+            'R-407a': 'Đường một chiều',
+            'R-409': 'Chỗ quay xe',
+            'R-425': 'Bệnh viện',
+            'R-434': 'Bến xe buýt',
+            'S-509a': 'Thuyết minh biển chính',
+            'W-201a': 'Chỗ ngoặt nguy hiểm vòng bên trái',
+            'W-201b': 'Chỗ ngoặt nguy hiểm vòng bên phải',
+            'W-202a': 'Nhiều chỗ ngoặt nguy hiểm liên tiếp',
+            'W-202b': 'Nhiều chỗ ngoặt nguy hiểm liên tiếp',
+            'W-203b': 'Đường hẹp bên trái',
+            'W-203c': 'Đường hẹp bên phải',
+            'W-205a': 'Đường giao nhau',
+            'W-205b': 'Đường giao nhau',
+            'W-205d': 'Đường giao nhau',
+            'W-207a': 'Giao nhau với đường không ưu tiên',
+            'W-207b': 'Giao nhau với đường không ưu tiên',
+            'W-207c': 'Giao nhau với đường không ưu tiên',
+            'W-208': 'Giao nhau với đường ưu tiên',
+            'W-209': 'Giao nhau có tín hiệu đèn',
+            'W-210': 'Giao nhau với đường sắt có rào chắn',
+            'W-219': 'Dốc xuống nguy hiểm',
+            'W-224': 'Đường người đi bộ cắt ngang',
+            'W-225': 'Trẻ em',
+            'W-227': 'Công trường',
+            'W-233': 'Nguy hiểm khác',
+            'W-235': 'Đường đôi',
+            'W-245a': 'Đi chậm'
+        };
+
         document.addEventListener("DOMContentLoaded", () => {
             const imageData = localStorage.getItem('last_image_data');
             const resultDataStr = localStorage.getItem('last_detection_result');
@@ -84,71 +150,134 @@
             imgElement.src = imageData;
             
             document.getElementById('img-resolution').textContent = `${resultData.image_width} x ${resultData.image_height}`;
+            document.getElementById('det-count').textContent = resultData.detections ? resultData.detections.length : 0;
             
-            imgElement.onload = () => {
+            function renderDetections() {
                 const bboxContainer = document.getElementById('bbox-container');
                 const detectionList = document.getElementById('detection-list');
                 
-                // Calculate display size and offset for bounding boxes
-                const imgRect = imgElement.getBoundingClientRect();
-                const containerRect = document.getElementById('image-container').getBoundingClientRect();
-                
-                const scaleX = imgRect.width / resultData.image_width;
-                const scaleY = imgRect.height / resultData.image_height;
-                
-                const offsetX = imgRect.left - containerRect.left;
-                const offsetY = imgRect.top - containerRect.top;
-                
+                bboxContainer.innerHTML = '';
                 detectionList.innerHTML = '';
                 
-                if (resultData.detections.length === 0) {
+                if (!resultData.detections || resultData.detections.length === 0) {
                     detectionList.innerHTML = `
                         <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
                             <h2 class="text-xl font-bold text-yellow-700">Không tìm thấy biển báo nào</h2>
+                            <p class="text-sm text-yellow-600 mt-1">Ảnh có thể không chứa biển báo hoặc độ tin cậy dưới ngưỡng quy định.</p>
                         </div>
                     `;
                     return;
                 }
                 
-                resultData.detections.forEach(det => {
+                // Scale based on visual dimensions of the image
+                const renderedWidth = imgElement.clientWidth;
+                const renderedHeight = imgElement.clientHeight;
+                const scaleX = renderedWidth / resultData.image_width;
+                const scaleY = renderedHeight / resultData.image_height;
+                
+                resultData.detections.forEach((det, idx) => {
+                    const signName = SIGN_NAMES[det.code] || 'Biển báo giao thông';
+                    
                     // Draw bounding box
-                    const x = offsetX + (det.x1 * scaleX);
-                    const y = offsetY + (det.y1 * scaleY);
+                    const x = det.x1 * scaleX;
+                    const y = det.y1 * scaleY;
                     const width = (det.x2 - det.x1) * scaleX;
                     const height = (det.y2 - det.y1) * scaleY;
                     
                     const box = document.createElement('div');
-                    box.className = 'absolute border-2 border-green-500 bg-green-500/20';
+                    box.className = 'absolute border-2 border-green-500 bg-green-500/20 transition-all';
                     box.style.left = `${x}px`;
                     box.style.top = `${y}px`;
                     box.style.width = `${width}px`;
                     box.style.height = `${height}px`;
                     
                     const label = document.createElement('span');
-                    label.className = 'absolute bottom-full left-0 bg-green-500 text-white text-xs font-bold px-1 whitespace-nowrap -translate-y-1';
+                    label.className = 'absolute bottom-full left-0 bg-green-600 text-white text-xs font-bold px-1.5 py-0.5 rounded shadow whitespace-nowrap -translate-y-1';
                     label.textContent = `${det.code} ${Math.round(det.confidence * 100)}%`;
                     
                     box.appendChild(label);
                     bboxContainer.appendChild(box);
                     
-                    // Add details
+                    // Detail card
                     const detHtml = `
                         <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
-                            <h2 class="text-xl font-bold text-green-700">${det.code}</h2>
-                            <p class="text-green-600 mt-1 flex items-center"><i class="fa-solid fa-check-circle mr-2"></i> Độ chính xác: ${(det.confidence * 100).toFixed(1)}%</p>
+                            <div class="flex items-center justify-between">
+                                <h2 class="text-lg font-bold text-green-800">${det.code}</h2>
+                                <span class="bg-green-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+                                    #${idx + 1}
+                                </span>
+                            </div>
+                            <p class="font-medium text-slate-800 mt-1">${signName}</p>
+                            <p class="text-green-700 text-sm mt-2 flex items-center">
+                                <i class="fa-solid fa-circle-check mr-2"></i> Độ tin cậy: <strong>${(det.confidence * 100).toFixed(1)}%</strong>
+                            </p>
                         </div>
                     `;
                     detectionList.innerHTML += detHtml;
                 });
-            };
+            }
 
+            if (imgElement.complete && imgElement.naturalWidth > 0) {
+                renderDetections();
+            } else {
+                imgElement.onload = renderDetections;
+            }
+            window.addEventListener('resize', renderDetections);
+
+            // Download annotated image or clean image
             document.getElementById('download-btn').addEventListener('click', () => {
-                const a = document.createElement('a');
-                a.href = imageData;
-                a.download = 'ket-qua-nhan-dien.jpg';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
+                if (!resultData.detections || resultData.detections.length === 0) {
+                    const a = document.createElement('a');
+                    a.href = imageData;
+                    a.download = 'ket-qua-nhan-dien.jpg';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    return;
+                }
+                
+                // Draw to canvas for high quality annotated download
+                const canvas = document.createElement('canvas');
+                canvas.width = resultData.image_width;
+                canvas.height = resultData.image_height;
+                const ctx = canvas.getContext('2d');
+                
+                const baseImg = new Image();
+                baseImg.onload = () => {
+                    ctx.drawImage(baseImg, 0, 0);
+                    ctx.lineWidth = Math.max(3, Math.round(canvas.width / 250));
+                    ctx.font = `bold ${Math.max(16, Math.round(canvas.width / 35))}px sans-serif`;
+                    
+                    resultData.detections.forEach(det => {
+                        const w = det.x2 - det.x1;
+                        const h = det.y2 - det.y1;
+                        
+                        // Draw box
+                        ctx.strokeStyle = '#22c55e';
+                        ctx.fillStyle = 'rgba(34, 197, 94, 0.2)';
+                        ctx.strokeRect(det.x1, det.y1, w, h);
+                        ctx.fillRect(det.x1, det.y1, w, h);
+                        
+                        // Draw label
+                        const text = `${det.code} ${Math.round(det.confidence * 100)}%`;
+                        const textMetrics = ctx.measureText(text);
+                        const textHeight = Math.max(16, Math.round(canvas.width / 35));
+                        
+                        ctx.fillStyle = '#16a34a';
+                        ctx.fillRect(det.x1, Math.max(0, det.y1 - textHeight - 8), textMetrics.width + 12, textHeight + 8);
+                        
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillText(text, det.x1 + 6, Math.max(textHeight, det.y1 - 6));
+                    });
+                    
+                    const a = document.createElement('a');
+                    a.href = canvas.toDataURL('image/jpeg', 0.95);
+                    a.download = 'ket-qua-nhan-dien-yolo.jpg';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                };
+                baseImg.src = imageData;
             });
         });
     </script>

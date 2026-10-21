@@ -1,9 +1,11 @@
 import logging
 from pathlib import Path
 from threading import Lock
-from typing import Any
+from typing import Any, Union
 
+import cv2
 import numpy as np
+from PIL import Image
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +24,18 @@ class TrafficSignDetector:
     def is_configured(self) -> bool:
         return self.model_path.is_file()
 
-    def predict(self, image: np.ndarray, confidence: float) -> list[dict[str, Any]]:
+    def reload(self) -> None:
+        """Clear cached model to force reloading on the next predict call."""
+        with self._lock:
+            self._model = None
+
+    def predict(self, image: Union[np.ndarray, Image.Image], confidence: float) -> list[dict[str, Any]]:
+        # Ensure BGR numpy array: Ultralytics expects BGR uint8 arrays and flips to RGB internally
+        if isinstance(image, Image.Image):
+            image = cv2.cvtColor(np.asarray(image.convert("RGB")), cv2.COLOR_RGB2BGR)
+        elif not isinstance(image, np.ndarray):
+            image = np.asarray(image)
+
         with self._lock:
             model = self._load_model()
             try:

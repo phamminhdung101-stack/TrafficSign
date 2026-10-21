@@ -2,6 +2,7 @@ from io import BytesIO
 import logging
 import warnings
 
+import cv2
 from fastapi import Depends, FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -177,8 +178,12 @@ async def detect_image(
     finally:
         await file.close()
 
+    # Convert PIL Image (RGB) to OpenCV BGR numpy array
+    # Ultralytics model.predict(np.ndarray) expects BGR format and flips BGR->RGB internally
+    image_bgr = cv2.cvtColor(np.asarray(image), cv2.COLOR_RGB2BGR)
+
     try:
-        detections = detector.predict(np.asarray(image), confidence)
+        detections = detector.predict(image_bgr, confidence)
     except ModelUnavailableError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 

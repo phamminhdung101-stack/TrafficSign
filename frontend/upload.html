@@ -48,7 +48,7 @@
     <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div class="mb-8">
             <h1 class="text-3xl font-bold tracking-tight text-slate-900">Bảng điều khiển Nhận diện AI</h1>
-            <p class="text-slate-500 mt-2">Tải lên hình ảnh, video hoặc sử dụng camera để hệ thống phân tích.</p>
+            <p class="text-slate-500 mt-2">Tải lên hình ảnh, video hoặc sử dụng camera để hệ thống phân tích biển báo giao thông.</p>
         </div>
 
         <div class="bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden">
@@ -92,23 +92,36 @@
                 <!-- Camera Area -->
                 <div id="content-camera" class="hidden space-y-6 flex flex-col items-center">
                     <div class="relative rounded-xl overflow-hidden border bg-black shadow-lg w-full max-w-lg aspect-video flex justify-center items-center">
-                        <video id="webcam-video" autoplay playsinline class="w-full h-full object-cover hidden"></video>
+                        <video id="webcam-video" autoplay playsinline class="w-full h-full object-contain hidden"></video>
                         <p id="cam-placeholder" class="text-slate-400"><i class="fa-solid fa-video-slash mb-2 block text-center text-3xl"></i> Bật camera để xem trước</p>
                         <canvas id="webcam-canvas" class="hidden"></canvas>
                     </div>
+                    
+                    <div id="capture-status" class="hidden text-sm text-green-700 bg-green-50 border border-green-200 px-4 py-2 rounded-lg flex items-center">
+                        <i class="fa-solid fa-circle-check mr-2"></i> <span>Đã chụp ảnh xong! Nhấn <strong>Thực hiện nhận diện</strong> bên dưới.</span>
+                    </div>
+
                     <div class="flex space-x-4">
-                        <button id="btn-start-cam" onclick="startCamera()" class="bg-slate-800 hover:bg-slate-900 text-white px-6 py-2 rounded-lg transition shadow">
+                        <button id="btn-start-cam" onclick="startCamera()" class="bg-slate-800 hover:bg-slate-900 text-white px-6 py-2.5 rounded-lg transition shadow flex items-center">
                             <i class="fa-solid fa-video mr-2"></i> Mở Camera
                         </button>
-                        <button id="btn-capture" onclick="captureImage()" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition shadow">
+                        <button id="btn-capture" onclick="captureImage()" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg transition shadow flex items-center">
                             <i class="fa-solid fa-camera mr-2"></i> Chụp ảnh
                         </button>
                     </div>
                 </div>
 
-                <!-- Action Button -->
-                <div class="mt-8 flex justify-end">
-                    <button id="btn-recognize" onclick="processRecognition()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed">
+                <!-- Action Controls: Confidence slider & Recognize Button -->
+                <div class="mt-8 pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center space-x-3 w-full sm:w-auto">
+                        <label for="conf-slider" class="text-sm font-medium text-slate-700 whitespace-nowrap">
+                            Ngưỡng tin cậy: <span id="conf-val" class="font-bold text-blue-600">25%</span>
+                        </label>
+                        <input type="range" id="conf-slider" min="5" max="90" value="25" step="5"
+                               class="w-36 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                               oninput="document.getElementById('conf-val').textContent = this.value + '%'">
+                    </div>
+                    <button id="btn-recognize" onclick="processRecognition()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed">
                         <span id="btn-text">Thực hiện nhận diện</span>
                     </button>
                 </div>
@@ -120,7 +133,7 @@
     <div id="toast" class="fixed bottom-4 right-4 bg-red-600 text-white px-6 py-4 rounded-lg shadow-xl transform transition-transform duration-300 translate-y-24 opacity-0 flex items-center z-50">
         <i class="fa-solid fa-circle-exclamation mr-3 text-xl"></i>
         <div>
-            <h4 class="font-bold">Lỗi xử lý!</h4>
+            <h4 class="font-bold">Thông báo</h4>
             <p class="text-sm opacity-90" id="toast-message">Vui lòng chọn file trước khi nhận diện.</p>
         </div>
     </div>
@@ -191,7 +204,7 @@
         let stream = null;
         async function startCamera() {
             try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 } } });
                 const video = document.getElementById('webcam-video');
                 video.srcObject = stream;
                 video.classList.remove('hidden');
@@ -199,23 +212,25 @@
                 document.getElementById('btn-start-cam').classList.add('hidden');
                 document.getElementById('btn-capture').classList.remove('hidden');
             } catch (err) {
-                showToast("Không thể truy cập camera. Vui lòng kiểm tra quyền.");
+                showToast("Không thể truy cập camera. Vui lòng kiểm tra quyền truy cập.");
             }
         }
 
         function captureImage() {
             const video = document.getElementById('webcam-video');
             const canvas = document.getElementById('webcam-canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             
-            // Generate visual feedback
-            video.classList.add('opacity-50');
-            setTimeout(() => video.classList.remove('opacity-50'), 200);
+            // Visual feedback
+            video.classList.add('opacity-40');
+            setTimeout(() => video.classList.remove('opacity-40'), 250);
             
-            // Mark as having file
+            // Mark as having file & show status badge
             currentFile = "camera_snapshot";
+            document.getElementById('capture-status').classList.remove('hidden');
             showToast("Đã chụp ảnh thành công!", "success");
         }
 
@@ -240,7 +255,7 @@
             const token = localStorage.getItem('access_token');
             if (!token) {
                 showToast("Bạn chưa đăng nhập. Vui lòng đăng nhập lại.");
-                setTimeout(() => window.location.href = 'login.html', 2000);
+                setTimeout(() => window.location.href = 'login.html', 1500);
                 return;
             }
 
@@ -254,15 +269,18 @@
             
             if (currentFile === "camera_snapshot") {
                 const canvas = document.getElementById('webcam-canvas');
-                const dataUrl = canvas.toDataURL('image/jpeg');
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
                 const blob = await (await fetch(dataUrl)).blob();
                 formData.append('file', blob, 'camera_capture.jpg');
             } else {
                 formData.append('file', currentFile);
             }
 
+            const confSlider = document.getElementById('conf-slider');
+            const confVal = confSlider ? (confSlider.value / 100).toFixed(2) : "0.25";
+
             try {
-                const response = await fetch('http://127.0.0.1:8000/api/detect?confidence=0.25', {
+                const response = await fetch(`http://127.0.0.1:8000/api/detect?confidence=${confVal}`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -283,7 +301,7 @@
                         reader.readAsDataURL(currentFile);
                     } else {
                         const canvas = document.getElementById('webcam-canvas');
-                        localStorage.setItem('last_image_data', canvas.toDataURL('image/jpeg'));
+                        localStorage.setItem('last_image_data', canvas.toDataURL('image/jpeg', 0.95));
                         localStorage.setItem('last_detection_result', JSON.stringify(data));
                         window.location.href = "result.html";
                     }

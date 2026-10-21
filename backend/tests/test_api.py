@@ -1,11 +1,12 @@
 import io
 import unittest
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 from fastapi.testclient import TestClient
 from PIL import Image
 
 from app.main import app, class_names, detector, get_current_user
+from app.services.detector import ModelUnavailableError
 from app.services.users import DuplicateUserError
 
 
@@ -25,9 +26,10 @@ class ApiTests(unittest.TestCase):
         app.dependency_overrides.clear()
 
     def test_health_reports_api_and_missing_weights(self) -> None:
-        response = self.client.get("/api/health")
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"status": "ok", "model_configured": False})
+        with patch.object(type(detector), "is_configured", new_callable=PropertyMock, return_value=False):
+            response = self.client.get("/api/health")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json(), {"status": "ok", "model_configured": False})
 
     def test_lists_all_dataset_classes(self) -> None:
         response = self.client.get("/api/signs")
@@ -40,10 +42,11 @@ class ApiTests(unittest.TestCase):
     def test_detection_returns_service_unavailable_without_weights(self) -> None:
         image_bytes = io.BytesIO()
         Image.new("RGB", (8, 8)).save(image_bytes, format="PNG")
-        response = self.client.post(
-            "/api/detect",
-            files={"file": ("sample.png", image_bytes.getvalue(), "image/png")},
-        )
+        with patch.object(detector, "predict", side_effect=ModelUnavailableError("Model weights were not found")):
+            response = self.client.post(
+                "/api/detect",
+                files={"file": ("sample.png", image_bytes.getvalue(), "image/png")},
+            )
         self.assertEqual(response.status_code, 503)
         self.assertIn("Model weights were not found", response.json()["detail"])
 
