@@ -16,8 +16,11 @@ def save_image_detection(
     detections: list[dict[str, Any]],
     image_width: int,
     image_height: int,
+    source_type: str = "image",
 ) -> int:
     safe_filename = Path(filename).name[:255] if filename else "upload"
+    # Ensure source_type is one of ('image', 'video', 'camera')
+    valid_source = source_type if source_type in ("image", "video", "camera") else "image"
     try:
         with get_engine().begin() as connection:
             model_id = connection.execute(
@@ -26,9 +29,9 @@ def save_image_detection(
             result = connection.execute(
                 text(
                     "INSERT INTO detections (user_id, model_id, source_type, source_path) "
-                    "VALUES (:user_id, :model_id, 'image', :source_path)"
+                    "VALUES (:user_id, :model_id, :source_type, :source_path)"
                 ),
-                {"user_id": user_id, "model_id": model_id, "source_path": safe_filename},
+                {"user_id": user_id, "model_id": model_id, "source_type": valid_source, "source_path": safe_filename},
             )
             detection_id = result.lastrowid
             for detection in detections:

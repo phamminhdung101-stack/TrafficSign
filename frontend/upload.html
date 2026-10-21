@@ -291,7 +291,15 @@
                 if (response.ok) {
                     const data = await response.json();
                     
-                    if (currentFile !== "camera_snapshot") {
+                    const finalImageData = data.image_data || (currentFile === "camera_snapshot" 
+                        ? document.getElementById('webcam-canvas').toDataURL('image/jpeg', 0.95) 
+                        : null);
+
+                    if (finalImageData) {
+                        localStorage.setItem('last_image_data', finalImageData);
+                        localStorage.setItem('last_detection_result', JSON.stringify(data));
+                        window.location.href = "result.html";
+                    } else {
                         const reader = new FileReader();
                         reader.onload = (e) => {
                             localStorage.setItem('last_image_data', e.target.result);
@@ -299,11 +307,6 @@
                             window.location.href = "result.html";
                         };
                         reader.readAsDataURL(currentFile);
-                    } else {
-                        const canvas = document.getElementById('webcam-canvas');
-                        localStorage.setItem('last_image_data', canvas.toDataURL('image/jpeg', 0.95));
-                        localStorage.setItem('last_detection_result', JSON.stringify(data));
-                        window.location.href = "result.html";
                     }
                 } else {
                     const error = await response.json();

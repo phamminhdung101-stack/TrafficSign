@@ -29,6 +29,7 @@ class ImageDetectionResponse(BaseModel):
     image_height: int
     history_id: int
     detections: list[DetectionResponse]
+    image_data: str | None = None
 
 
 class RegisterRequest(BaseModel):
