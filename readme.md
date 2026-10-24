@@ -39,7 +39,7 @@ Mở Terminal tại thư mục `d:\traffic-sign-recognition`:
 
 ```powershell
 # Kích hoạt môi trường ảo
-.\venv\Scripts\Activate.ps1
+venv\Scripts\activate.bat
 
 # Cài đặt thư viện (nếu chưa cài)
 pip install -r backend/requirements.txt
