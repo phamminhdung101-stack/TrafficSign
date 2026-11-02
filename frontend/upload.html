@@ -296,7 +296,8 @@
             const confVal = confSlider ? (confSlider.value / 100).toFixed(2) : "0.25";
 
             try {
-                const response = await fetch(`http://127.0.0.1:8000/api/detect?confidence=${confVal}`, {
+                const apiPort = localStorage.getItem('api_base_port') || '8000';
+                const response = await fetch(`http://127.0.0.1:${apiPort}/api/detect?confidence=${confVal}`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`

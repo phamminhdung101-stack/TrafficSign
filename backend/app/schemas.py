@@ -17,6 +17,7 @@ class SignResponse(BaseModel):
 class DetectionResponse(BaseModel):
     class_id: int
     code: str
+    name: str | None = None
     confidence: float = Field(ge=0, le=1)
     x1: float
     y1: float

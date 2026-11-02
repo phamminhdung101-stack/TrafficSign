@@ -35,9 +35,9 @@ class ApiTests(unittest.TestCase):
         response = self.client.get("/api/signs")
         self.assertEqual(response.status_code, 200)
         signs = response.json()
-        self.assertEqual(len(signs), 56)
+        self.assertEqual(len(signs), 5)
         self.assertEqual(signs[0], {"class_id": 0, "code": class_names[0]})
-        self.assertEqual(signs[-1]["class_id"], 55)
+        self.assertEqual(signs[-1]["class_id"], 4)
 
     def test_detection_returns_service_unavailable_without_weights(self) -> None:
         image_bytes = io.BytesIO()

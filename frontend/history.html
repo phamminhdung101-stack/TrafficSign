@@ -71,7 +71,8 @@
             }
 
             try {
-                const response = await fetch('http://127.0.0.1:8000/api/history?limit=20&offset=0', {
+                const apiPort = localStorage.getItem('api_base_port') || '8000';
+                const response = await fetch(`http://127.0.0.1:${apiPort}/api/history?limit=20&offset=0`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 

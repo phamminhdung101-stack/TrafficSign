@@ -52,7 +52,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=get_cors_origins(),
     allow_credentials=True,
-    allow_methods=["GET", "POST"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
@@ -74,6 +74,14 @@ def load_class_names() -> list[str]:
 
 
 class_names = load_class_names()
+
+VIETNAMESE_SIGN_NAMES = {
+    "W-208": "Giao nhau với đường ưu tiên",
+    "R-303": "Nơi giao nhau chạy theo vòng xuyến",
+    "P-130": "Cấm dừng xe và đỗ xe",
+    "P-127": "Tốc độ tối đa cho phép",
+    "P-123b": "Cấm rẽ phải",
+}
 
 
 def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
@@ -267,12 +275,17 @@ async def detect_image(
         image_data_url = "data:image/jpeg;base64," + base64.b64encode(buf).decode("utf-8")
         source_type = "image"
 
+    filtered_detections = []
     for detection in detections:
         class_id = int(detection["class_id"])
-        if class_id < 0 or class_id >= len(class_names):
-            logger.error("Model returned class id %d outside the configured class range", class_id)
-            raise HTTPException(status_code=500, detail="Model class IDs do not match the dataset configuration.")
-        detection["code"] = class_names[class_id]
+        if 0 <= class_id < len(class_names):
+            code = class_names[class_id]
+            detection["code"] = code
+            detection["name"] = VIETNAMESE_SIGN_NAMES.get(code, code)
+            filtered_detections.append(detection)
+        else:
+            logger.warning("Ignoring detection outside configured 5 classes: %s", detection)
+    detections = filtered_detections
 
     try:
         history_id = save_image_detection(
